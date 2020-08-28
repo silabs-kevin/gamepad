@@ -1,0 +1,13 @@
+build
+GNU\ *
+a.out
+core
+.clangd
+.gdb*
+*.bak
+
+# User Specific Files
+# Kevin
+*.swp
+tags
+compile_commands.json
