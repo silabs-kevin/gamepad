@@ -20,6 +20,7 @@
 #include "gatt_db.h"
 #include "app.h"
 
+#include "logging/logging.h"
 // The advertising set handle allocated from Bluetooth stack.
 static uint8_t advertising_set_handle = 0xff;
 
@@ -28,6 +29,7 @@ static uint8_t advertising_set_handle = 0xff;
  *****************************************************************************/
 SL_WEAK void app_init(void)
 {
+  INIT_LOG(0xff);
   /////////////////////////////////////////////////////////////////////////////
   // Put your additional application init code here!                         //
   // This is called once during start-up.                                    //
@@ -65,6 +67,7 @@ void sl_bt_on_event(sl_bt_msg_t *evt)
     // Do not call any stack command before receiving this boot event!
     case sl_bt_evt_system_boot_id:
 
+      LOGD("System booted\n");
       // Extract unique ID from BT Address.
       sc = sl_bt_system_get_identity_address(&address, &address_type);
       sl_app_assert(sc == SL_STATUS_OK,

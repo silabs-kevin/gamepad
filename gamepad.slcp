@@ -17,8 +17,11 @@ source:
 project_name: gamepad
 quality: production
 component:
+- {id: iostream_retarget_stdio}
 - {id: EFR32BG13P632F512GM48}
 - {id: brd4001a}
+- instance: [vcom]
+  id: iostream_usart
 - {id: mpu}
 - {id: component_catalog}
 - {id: ota_dfu}
