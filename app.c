@@ -21,8 +21,7 @@
 #include "app.h"
 
 #include "logging/logging.h"
-// The advertising set handle allocated from Bluetooth stack.
-static uint8_t advertising_set_handle = 0xff;
+#include "inc/bt.h"
 
 /**************************************************************************//**
  * Application Init.
@@ -56,93 +55,52 @@ SL_WEAK void app_process_action(void)
  *****************************************************************************/
 void sl_bt_on_event(sl_bt_msg_t *evt)
 {
-  sl_status_t sc;
-  bd_addr address;
-  uint8_t address_type;
-  uint8_t system_id[8];
-
-  switch (SL_BT_MSG_ID(evt->header)) {
-    // -------------------------------
-    // This event indicates the device has started and the radio is ready.
-    // Do not call any stack command before receiving this boot event!
+  uint32_t evt_id = SL_BT_MSG_ID(evt->header);
+  switch (evt_id) {
     case sl_bt_evt_system_boot_id:
-
-      LOGD("System booted\n");
-      // Extract unique ID from BT Address.
-      sc = sl_bt_system_get_identity_address(&address, &address_type);
-      sl_app_assert(sc == SL_STATUS_OK,
-                    "[E: 0x%04x] Failed to get Bluetooth address\n",
-                    (int)sc);
-
-      // Pad and reverse unique ID to get System ID.
-      system_id[0] = address.addr[5];
-      system_id[1] = address.addr[4];
-      system_id[2] = address.addr[3];
-      system_id[3] = 0xFF;
-      system_id[4] = 0xFE;
-      system_id[5] = address.addr[2];
-      system_id[6] = address.addr[1];
-      system_id[7] = address.addr[0];
-
-      sc = sl_bt_gatt_server_write_attribute_value(gattdb_system_id,
-                                                   0,
-                                                   sizeof(system_id),
-                                                   system_id);
-      sl_app_assert(sc == SL_STATUS_OK,
-                    "[E: 0x%04x] Failed to write attribute\n",
-                    (int)sc);
-
-      // Create an advertising set.
-      sc = sl_bt_advertiser_create_set(&advertising_set_handle);
-      sl_app_assert(sc == SL_STATUS_OK,
-                    "[E: 0x%04x] Failed to create advertising set\n",
-                    (int)sc);
-
-      // Set advertising interval to 100ms.
-      sc = sl_bt_advertiser_set_timing(
-        advertising_set_handle,
-        160, // min. adv. interval (milliseconds * 1.6)
-        160, // max. adv. interval (milliseconds * 1.6)
-        0,   // adv. duration
-        0);  // max. num. adv. events
-      sl_app_assert(sc == SL_STATUS_OK,
-                    "[E: 0x%04x] Failed to set advertising timing\n",
-                    (int)sc);
-      // Start general advertising and enable connections.
-      sc = sl_bt_advertiser_start(
-        advertising_set_handle,
-        advertiser_general_discoverable,
-        advertiser_connectable_scannable);
-      sl_app_assert(sc == SL_STATUS_OK,
-                    "[E: 0x%04x] Failed to start advertising\n",
-                    (int)sc);
+    case sl_bt_evt_system_external_signal_id:
+    case sl_bt_evt_system_soft_timer_id:
+      bt_system_evt_handler(evt);
       break;
 
-    // -------------------------------
-    // This event indicates that a new connection was opened.
     case sl_bt_evt_connection_opened_id:
-      break;
-
-    // -------------------------------
-    // This event indicates that a connection was closed.
     case sl_bt_evt_connection_closed_id:
-      // Restart advertising after client has disconnected.
-      sc = sl_bt_advertiser_start(
-        advertising_set_handle,
-        advertiser_general_discoverable,
-        advertiser_connectable_scannable);
-      sl_app_assert(sc == SL_STATUS_OK,
-                    "[E: 0x%04x] Failed to start advertising\n",
-                    (int)sc);
+    case sl_bt_evt_connection_parameters_id:
+      bt_conn_evt_handler(evt);
       break;
 
-    ///////////////////////////////////////////////////////////////////////////
-    // Add additional event handlers here as your application requires!      //
-    ///////////////////////////////////////////////////////////////////////////
+    case sl_bt_evt_sm_bonded_id:
+    case sl_bt_evt_sm_bonding_failed_id:
+    case sl_bt_evt_sm_confirm_bonding_id:
+    case sl_bt_evt_sm_confirm_passkey_id:
+      bt_sm_evt_handler(evt);
+      break;
 
-    // -------------------------------
-    // Default event handler.
+    case sl_bt_evt_gatt_server_characteristic_status_id:
+    case sl_bt_evt_gatt_server_attribute_value_id:
+    case sl_bt_evt_gatt_server_user_write_request_id:
+      bt_gatt_server_evt_handler(evt);
+      break;
+
+    case sl_bt_evt_advertiser_timeout_id:
+      bt_advertiser_evt_handler(evt);
+      break;
+
+    case sl_bt_evt_gatt_mtu_exchanged_id:
+      LOGH("MTU:%u\n", evt->data.evt_gatt_mtu_exchanged.mtu);
+      break;
+    /* Add additional event handlers as your application requires */
+    /*
+     * for events not to be handled, list here.
+     */
+    case sl_bt_evt_connection_phy_status_id:
+      break;
+
     default:
+      LOGW("Unhandled event(0x%08x). Message class: 0x%02x, Message ID: 0x%02x\n",
+           evt_id,
+           (uint8_t)(evt_id >> 16),
+           (uint8_t)(evt_id >> 24));
       break;
   }
 }
