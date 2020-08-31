@@ -7,7 +7,6 @@
 
 /* Includes *********************************************************** */
 #include "inc/hal/button.h"
-#include "em_gpio.h"
 #include "gpiointerrupt.h"
 #include "logging/logging.h"
 #include "inc/hid/hid_gamepad.h"
@@ -29,6 +28,25 @@ typedef struct {
 static btn_evt_t btn_evt = { 0 };
 
 /* Static Functions Declaractions ************************************* */
+static const btn_t up_btn = {
+  .port = gpioPortF,
+  .pin = 6,
+  .press_evt_em = PB0_PRESS_EM
+};
+
+static const btn_t down_btn = {
+  .port = gpioPortF,
+  .pin = 7,
+  .press_evt_em = PB1_PRESS_EM
+};
+
+/* This should align with the sequence 16-bit in the report*/
+static const btn_t *btns[] = {
+  &up_btn,
+  &down_btn,
+};
+
+static const size_t btn_num = sizeof(btns) / sizeof(btn_t *);
 
 static void btn_push_evt(uint8_t evt)
 {
@@ -42,9 +60,12 @@ static void btn_push_evt(uint8_t evt)
 
 static void button_init(void)
 {
-  // configure pushbutton PB0 and PB1 as inputs, with pull-up enabled
-  GPIO_PinModeSet(BSP_BUTTON0_PORT, BSP_BUTTON0_PIN, gpioModeInputPullFilter, 1);
-  GPIO_PinModeSet(BSP_BUTTON1_PORT, BSP_BUTTON1_PIN, gpioModeInputPullFilter, 1);
+  for (uint8_t i = 0; i < btn_num; i++) {
+    GPIO_PinModeSet(btns[i]->port,
+                    btns[i]->pin,
+                    gpioModeInputPullFilter,
+                    1);
+  }
 }
 
 /***************************************************************************//**
@@ -61,25 +82,14 @@ static void button_init(void)
  ******************************************************************************/
 static void button_interrupt(uint8_t pin)
 {
-  switch (pin) {
-    case BSP_BUTTON0_PIN:
-      if (GPIO_PinInGet(BSP_BUTTON0_PORT, BSP_BUTTON0_PIN) == 0) {
-        /* btn_push_evt(PB0_PRESS_EM); */
-        return;
-      } else {
-        btn_push_evt(PB0_RELEASE_EM);
-      }
-      break;
-    case BSP_BUTTON1_PIN:
-      if (GPIO_PinInGet(BSP_BUTTON1_PORT, BSP_BUTTON1_PIN) == 0) {
-        /* btn_push_evt(PB1_PRESS_EM); */
-        return;
-      } else {
-        btn_push_evt(PB1_RELEASE_EM);
-      }
-      break;
-    default:
-      return;
+  if (pin >= btn_num) {
+    return;
+  }
+  if (GPIO_PinInGet(btns[pin]->port,
+                    btns[pin]->pin)) {
+    btn_push_evt(btns[pin]->press_evt_em);
+  } else {
+    btn_push_evt(btns[pin]->press_evt_em + 1);
   }
   sl_bt_external_signal(PB_UPDATE_EVT);
 }
@@ -92,15 +102,17 @@ static void enable_button_interrupts(void)
 {
   GPIOINT_Init();
 
-  /* configure interrupt for PB0 and PB1, both falling and rising edges */
-  GPIO_ExtIntConfig(BSP_BUTTON0_PORT, BSP_BUTTON0_PIN, BSP_BUTTON0_PIN,
-                    true, true, true);
-  GPIO_ExtIntConfig(BSP_BUTTON1_PORT, BSP_BUTTON1_PIN, BSP_BUTTON1_PIN,
-                    true, true, true);
-
-  /* register the callback function that is invoked when interrupt occurs */
-  GPIOINT_CallbackRegister(BSP_BUTTON0_PIN, button_interrupt);
-  GPIOINT_CallbackRegister(BSP_BUTTON1_PIN, button_interrupt);
+  for (uint8_t i = 0; i < btn_num; i++) {
+    /* configure interrupt for PB0 and PB1, both falling and rising edges */
+    GPIO_ExtIntConfig(btns[i]->port,
+                      btns[i]->pin,
+                      i,
+                      true,
+                      true,
+                      true);
+    GPIOINT_CallbackRegister(i,
+                             button_interrupt);
+  }
 }
 
 void btn_init(void)
