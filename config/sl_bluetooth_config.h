@@ -5,7 +5,7 @@
 // <o SL_BT_CONFIG_MAX_CONNECTIONS> Max number of connections <0-8>
 // <i> Default: 4
 // <i> Define the number of connections the application needs.
-#define SL_BT_CONFIG_MAX_CONNECTIONS     (4)
+#define SL_BT_CONFIG_MAX_CONNECTIONS     (1)
 
 // <o SL_BT_CONFIG_USER_ADVERTISERS> Max number of advertisers reserved for user <0-8>
 // <i> Default: 1
@@ -17,7 +17,7 @@
 // <o SL_BT_CONFIG_MAX_SOFTWARE_TIMERS> Max number of software timers <0-16>
 // <i> Default: 4
 // <i> Define the number of software timers the application needs.  Each timer needs resources from the stack to be implemented. Increasing amount of soft timers may cause degraded performance in some use cases.
-#define SL_BT_CONFIG_MAX_SOFTWARE_TIMERS     (4)
+#define SL_BT_CONFIG_MAX_SOFTWARE_TIMERS     (8)
 
 // <o SL_BT_CONFIG_MAX_PERIODIC_ADVERTISING_SYNC> Max number of periodic advertising synchronizations <0-8>
 // <i> Default: 0

@@ -11,6 +11,11 @@
 extern "C"
 {
 #endif
+
+#include "em_gpio.h"
+
+#define BTN_NUM 16
+
 #define BSP_BUTTON0_PIN                               (6U)
 #define BSP_BUTTON0_PORT                              (gpioPortF)
 
@@ -18,6 +23,12 @@ extern "C"
 #define BSP_BUTTON1_PORT                              (gpioPortF)
 
 #define PB_UPDATE_EVT (1 << 0UL)
+
+typedef struct {
+  GPIO_Port_TypeDef port;
+  unsigned int pin;
+  uint8_t press_evt_em; /* corresponding release event id = this event id +1 */
+}btn_t;
 
 enum {
   PB0_PRESS_EM = 1,

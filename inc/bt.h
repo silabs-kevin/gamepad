@@ -26,7 +26,7 @@ extern "C"
 
 #define SE_CALL3(x)                                              \
   do {                                                           \
-    sl_status_t se_call_exclusive_returned_value = (x);             \
+    sl_status_t se_call_exclusive_returned_value = (x);          \
     ASSERT_MSG(se_call_exclusive_returned_value == SL_STATUS_OK, \
                "BGAPI Call Failed, Error Code: 0x%04x\n",        \
                se_call_exclusive_returned_value);                \
@@ -41,6 +41,18 @@ extern "C"
 #define SUPERVISION_TIMEOUT_MS(x) ((x) * 10)
 
 #define BONDING_INFO_PSKEY  0x4000
+
+#ifndef TEST_LOGGING
+#define TEST_LOGGING  0
+#endif
+
+/* All the soft timer ID */
+enum {
+  TEST_TMID = 33,
+#if defined(TEST_LOGGING) && (TEST_LOGGING == 1)
+  PERIODICAL_LOGGING_TMID = 133,
+#endif
+};
 
 typedef struct {
   bool enabled;
