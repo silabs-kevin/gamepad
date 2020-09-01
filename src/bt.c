@@ -21,7 +21,7 @@
 #define DUMP_LTK  1
 #endif
 
-#define DISABLE_SLEEP
+/* #define DISABLE_SLEEP */
 
 /* Global Variables *************************************************** */
 
@@ -372,7 +372,7 @@ static inline void __on_gatt_server_char_status(const sl_bt_msg_t* evt)
     bt.adv_conn.conn.gatts.report_ccc = e->client_config_flags;
 
 #if TEST
-    sl_bt_cmd_hardware_set_soft_timer(32768, 33, 0);
+    sl_bt_cmd_hardware_set_soft_timer(32768, TEST_TMID, 0);
 #endif
   }
 }
@@ -390,7 +390,7 @@ static inline void __on_softtimer(const sl_bt_msg_t* evt)
       lvl = (lvl + 1) % (LOGGING_VERBOSE + 1);
       break;
 #endif
-    case 33:
+    case TEST_TMID:
       test();
       break;
   }

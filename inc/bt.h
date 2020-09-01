@@ -43,11 +43,12 @@ extern "C"
 #define BONDING_INFO_PSKEY  0x4000
 
 #ifndef TEST_LOGGING
-#define TEST_LOGGING  1
+#define TEST_LOGGING  0
 #endif
 
 /* All the soft timer ID */
 enum {
+  TEST_TMID = 33,
 #if defined(TEST_LOGGING) && (TEST_LOGGING == 1)
   PERIODICAL_LOGGING_TMID = 133,
 #endif
