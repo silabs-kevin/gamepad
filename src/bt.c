@@ -21,6 +21,8 @@
 #define DUMP_LTK  1
 #endif
 
+#define DISABLE_SLEEP
+
 /* Global Variables *************************************************** */
 
 /* Static Variables *************************************************** */
@@ -29,6 +31,24 @@ static bt_t bt = { 0 };
 /* Static Functions Declaractions ************************************* */
 static void test(void);
 
+#ifdef DISABLE_SLEEP
+bool app_is_ok_to_sleep(void)
+{
+  return false;
+}
+#endif
+#if defined(TEST_LOGGING) && (TEST_LOGGING == 1)
+#define LOGGING_TEST_INTERVAL (32768 * 2)
+static uint8_t lvl = 0;
+static void _start_logging_test(void)
+{
+  logging_demo(0xff);
+
+  SE_CALL3(sl_bt_system_set_soft_timer(LOGGING_TEST_INTERVAL,
+                                       PERIODICAL_LOGGING_TMID,
+                                       0));
+}
+#endif
 #if defined(DUMP_LTK) && (DUMP_LTK == 1)
 static void dump_ltk(void)
 {
@@ -364,6 +384,12 @@ static inline void __on_softtimer(const sl_bt_msg_t* evt)
   e = &evt->data.evt_system_soft_timer;
 
   switch (e->handle) {
+#if defined(TEST_LOGGING) && (TEST_LOGGING == 1)
+    case PERIODICAL_LOGGING_TMID:
+      logging_demo(lvl);
+      lvl = (lvl + 1) % (LOGGING_VERBOSE + 1);
+      break;
+#endif
     case 33:
       test();
       break;
@@ -429,7 +455,11 @@ void bt_system_evt_handler(const sl_bt_msg_t* e)
 {
   switch (SL_BT_MSG_ID(e->header)) {
     case sl_bt_evt_system_boot_id:
+#if defined(TEST_LOGGING) && (TEST_LOGGING == 1)
+      _start_logging_test();
+#else
       __on_system_boot(e);
+#endif
       break;
     case sl_bt_evt_system_external_signal_id:
       __on_external_signals(e);
