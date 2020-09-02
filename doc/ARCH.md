@@ -16,14 +16,18 @@
 
 ## HID Report
 
-|                 | Bit 0    | Bit 1    | Bit 2        | Bit 3       | Bit 4   | Bit 5    | Bit 6    | Bit 7    |
-| --------------- | -------- | -------- | ------------ | ----------- | ------- | -------- | -------- | -------- |
-| Byte 0 (Button) | A (96)   | B (97)   | (98)         | X (99)      | Y (100) | (101)    | L1 (102) | R1 (103) |
-| Byte 1 (Button) | L2 (104) | R2 (105) | Select (109) | Start (108) | (110)   | TL (106) | TR(107)  | 0        |
-| Byte 2 (Stick)  |          |          |              |             |         |          |          |          |
-| Byte 3 (Stick)  |          |          |              |             |         |          |          |          |
-| Byte 4 (Stick)  |          |          |              |             |         |          |          |          |
-| Byte 5 (Stick)  |          |          |              |             |         |          |          |          |  |
+|                  | Bit 0    | Bit 1    | Bit 2        | Bit 3       | Bit 4      | Bit 5        | Bit 6       | Bit 7    |
+| ---------------- | -------- | -------- | ------------ | ----------- | ---------- | ------------ | ----------- | -------- |
+| Byte 0 (Buttons) | A (96)   | B (97)   | C (98)       | X (99)      | Y (100)    | Z (101)      | L1 (102)    | R1 (103) |
+| Byte 1 (Buttons) | L2 (104) | R2 (105) | Select (109) | Start (108) | Mode (110) | THUMBL (106) | THUMBR(107) | 0        |
+| Byte 2 (X)       |          |          |              |             |            |              |             |          |
+| Byte 3 (Y)       |          |          |              |             |            |              |             |          |
+| Byte 4 (Z)       |          |          |              |             |            |              |             |          |
+| Byte 5 (Rz)      |          |          |              |             |            |              |             |          |  |
+
+Axis X and Y are for the left joystick. Axis Z and Rz are for the left joystick.
+Check Android's header file [input.h](https://android.googlesource.com/platform/frameworks/native/+/master/include/android/input.h)
+for details.
 
 ## NOTES
 

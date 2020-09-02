@@ -14,7 +14,7 @@
 /* Static Variables *************************************************** */
 
 /* Static Functions Declaractions ************************************* */
-/* 0x05010905a1010901a10005091901291015002501951075018102050109300931093209331581257f750895048102c0c0   */
+/* 0x05010905a1010901a10005091901291015002501951075018102050109300931093209351581257f750895048102c0c0   */
 const char joystick_report_desc[48] = {
   0x05, 0x01,                      // USAGE_PAGE (Generic Desktop)
   0x09, 0x05,                      // USAGE (Game Pad)
@@ -33,7 +33,7 @@ const char joystick_report_desc[48] = {
   0x09, 0x30,                      //     USAGE (X)
   0x09, 0x31,                      //     USAGE (Y)
   0x09, 0x32,                      //     USAGE (Z)
-  0x09, 0x33,                      //     USAGE (Rx)
+  0x09, 0x35,                      //     USAGE (Rx)
   0x15, 0x81,                      //     LOGICAL_MINIMUM (-127)
   0x25, 0x7f,                      //     LOGICAL_MAXIMUM (127)
   0x75, 0x08,                      //     REPORT_SIZE (8)

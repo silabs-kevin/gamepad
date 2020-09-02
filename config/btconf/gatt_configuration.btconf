@@ -159,7 +159,7 @@
     <!--Report Map-->
     <characteristic const="true" id="report_map" name="Report Map" sourceId="org.bluetooth.characteristic.report_map" uuid="2A4B">
       <informativeText>Summary: The Report Map characteristic is used to define formatting information for Input Report, Output Report, and Feature Report data transferred between a HID Device and HID Host, information on how this data can be used, and other information regarding physical aspects of the device (i.e. that the device functions as a keyboard, for example, or has multiple functions such as a keyboard and volume controls).       Only a single instance of this characteristic exists as part of a HID Service. </informativeText>
-      <value length="48" type="hex" variable_length="false">0x05010905a1010901a10005091901291015002501951075018102050109300931093209331581257f750895048102c0c0</value>
+      <value length="48" type="hex" variable_length="false">0x05010905a1010901a10005091901291015002501951075018102050109300931093209351581257f750895048102c0c0</value>
       <properties>
         <read authenticated="false" bonded="false" encrypted="false"/>
       </properties>
