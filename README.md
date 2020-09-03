@@ -27,6 +27,10 @@
 
 ## NOTES
 
+- It's obvious that the game controllers for Apple devices need MFi, see https://developer.apple.com/library/archive/documentation/ServicesDiscovery/Conceptual/GameControllerPG/Introduction/Introduction.html#//apple_ref/doc/uid/TP40013276-CH1-SW1
+
+> You can rely on a consistent set of high-quality controls in all game controllers because Apple has specified the look and behavior of the controls to MFi accessory manufacturers.
+
 - Connecting with iOS device, if iOS updates the connection interval to be 12
   actively, which means the device is regconized as a HID device.
 
@@ -43,3 +47,5 @@
 | MTU                 | 185                     | 247   | 247     |
 | Tx Size             | 27                      | 251   | 251     |
 | Secure Level        | 1                       | 1     | 1       |
+
+
