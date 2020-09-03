@@ -30,10 +30,10 @@ static void _gamepad_send_report(void)
       && gamepad.bt->adv_conn.conn.gatts.report_ccc != 0) {
     uint16_t sent_len;
     SE_CALL3(sl_bt_gatt_server_send_characteristic_notification(gamepad.bt->adv_conn.conn_handle,
-                                                               gattdb_report,
-                                                               REPORT_SIZE,
-                                                               (uint8_t *)gamepad.report_buf,
-                                                               &sent_len));
+                                                                gattdb_report,
+                                                                REPORT_SIZE,
+                                                                (uint8_t *)gamepad.report_buf,
+                                                                &sent_len));
     LOGD("Report once.\n");
   }
 }
@@ -48,9 +48,15 @@ static void _gamepad_on_btn_update(uint8_t which, bool press)
   _gamepad_send_report();
 }
 
-static void _gamepad_on_stick_update(uint8_t which, int8_t value)
+static void _gamepad_on_stick_update(int8_t x,
+                                     int8_t y,
+                                     int8_t z,
+                                     int8_t rz)
 {
-  gamepad.report_buf[2 + which] = value;
+  gamepad.report_buf[2] = x;
+  gamepad.report_buf[3] = y;
+  gamepad.report_buf[4] = z;
+  gamepad.report_buf[5] = rz;
 
   _gamepad_send_report();
 }

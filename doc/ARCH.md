@@ -67,6 +67,14 @@ Axis X and Y are for the left joystick. Axis Z and Rz are for the left joystick.
 Check Android's header file [input.h](https://android.googlesource.com/platform/frameworks/native/+/master/include/android/input.h)
 for details.
 
+## Design Notes
+
+Joystick bitmap for states
+
+| bit 7         | bit 6        | bit 5       | bit 4      | bit 3                | bit 2            | bit 1    | bit 0    |
+| ------------- | ------------ | ----------- | ---------- | -------------------- | ---------------- | -------- | -------- |
+| Timer Started | Timer Inited | ADC Started | ADC Inited | Convert Result Valid | ADC Result Valid | Reserved | Reserved |
+
 ## NOTES
 
 - Connecting with iOS device, if iOS updates the connection interval to be 12
