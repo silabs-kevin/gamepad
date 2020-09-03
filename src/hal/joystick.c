@@ -14,8 +14,10 @@
 #include "em_prs.h"
 #include "em_ldma.h"
 #include "em_letimer.h"
+#include "inc/utils.h"
 #include "sl_bt_api.h"
 #include "logging/logging.h"
+#include "inc/hid/hid_gamepad.h"
 /* Defines  *********************************************************** */
 #define ADC_RESULT_SIZE 4
 
@@ -34,15 +36,18 @@ static const gpio_t axis_x_gpio = {
 static const gpio_t axis_y_gpio = {
   .port = gpioPortA,
   .pin = 5,
+  .pos = adcPosSelAPORT2XCH9
 };
 
 static const gpio_t axis_z_gpio = {
   .port = gpioPortA,
   .pin = 5,
+  .pos = adcPosSelAPORT2XCH9
 };
 static const gpio_t axis_rz_gpio = {
   .port = gpioPortA,
   .pin = 5,
+  .pos = adcPosSelAPORT2XCH9
 };
 
 /* Static Variables *************************************************** */
@@ -61,35 +66,37 @@ void LDMA_IRQHandler(void)
   // Clear interrupt flag
   LDMA_IntClear((1 << LDMA_CHANNEL) << _LDMA_IFC_DONE_SHIFT);
 
+  SET_ADC_VALID(jstk.states);
   sl_bt_external_signal(JOYSTICK_UPDATE_EVT);
 }
 
 static void _jstk_stop(void)
 {
-  if (jstk.timer.state != enabled) {
+  if (TIMER_STATE(jstk.states) != enabled) {
     return;
   }
 
   LETIMER_Enable(LETIMER0, 0);
-  jstk.timer.state = init_ed;
+  TIMER_TO_INITED(jstk.states);
 }
 
 static void _jstk_start(void)
 {
-  if (jstk.timer.state == init_ed) {
+  if (TIMER_STATE(jstk.states) == init_ed) {
     LETIMER_Enable(LETIMER0, 1);
+    TIMER_TO_STARTED(jstk.states);
   }
 }
 
 static void _jstk_init(uint16_t freq,
                        uint8_t enable)
 {
-  if (jstk.timer.state == enabled) {
+  if (TIMER_STATE(jstk.states) == enabled) {
     _jstk_stop();
   }
 
   /* ADC Init */
-  if (jstk.adc_state == nil) {
+  if (ADC_STATE(jstk.states) == nil) {
     // Declare init structs
     ADC_Init_TypeDef init = ADC_INIT_DEFAULT;
     ADC_InitScan_TypeDef initScan = ADC_INITSCAN_DEFAULT;
@@ -142,9 +149,10 @@ static void _jstk_init(uint16_t freq,
 
     // Clear the SCAN FIFO
     ADC0->SCANFIFOCLEAR = ADC_SCANFIFOCLEAR_SCANFIFOCLEAR;
+    ADC_TO_STARTED(jstk.states);
   }
 
-  if (jstk.timer.state == nil) {
+  if (TIMER_STATE(jstk.states) == nil) {
     // Start LFRCO and wait until it is stable
     CMU_OscillatorEnable(cmuOsc_LFRCO, true, true);
 
@@ -206,9 +214,9 @@ static void _jstk_init(uint16_t freq,
     NVIC_ClearPendingIRQ(LDMA_IRQn);
     NVIC_EnableIRQ(LDMA_IRQn);
   }
-
+  jstk.timer.freq = freq == 0 ? LETIMERDESIRED : freq;
   // calculate the topValue
-  uint32_t topValue = CMU_ClockFreqGet(cmuClock_LETIMER0) / (jstk.timer.freq == 0 ? LETIMERDESIRED : jstk.timer.freq);
+  uint32_t topValue = CMU_ClockFreqGet(cmuClock_LETIMER0) / jstk.timer.freq;
 
   // Compare on wake-up interval count
   LETIMER_CompareSet(LETIMER0, 0, topValue);
@@ -218,9 +226,35 @@ static void _jstk_init(uint16_t freq,
   }
 }
 
-/**************************************************************************//**
- * @brief LDMA initialization
- *****************************************************************************/
+void jstk_convert(void)
+{
+  bool update = false;
+  if (!ADC_RESULT_VALID(jstk.states)) {
+    return;
+  }
+
+  for (uint8_t i = 0; i < ADC_CHANNEL_NUM; i++) {
+    if (jstk.axis[i].gpio) {
+      uint32_t ret = build_uint32(adc_buf + 4 * i, 'l');
+      int8_t val = (int)(ret * REF_MILLI_VOLT / ADC_RESOLUTION - REF_MILLI_VOLT / 2) * 127 / ((REF_MILLI_VOLT / 2));
+      if (val != jstk.axis[i].val && !update) {
+        update = 1;
+      }
+    }
+  }
+
+  if (!update) {
+    return;
+  }
+
+  gamepad.stick_update(
+    jstk.axis[0].gpio ? jstk.axis[0].val : 0,
+    jstk.axis[1].gpio ? jstk.axis[1].val : 0,
+    jstk.axis[2].gpio ? jstk.axis[2].val : 0,
+    jstk.axis[3].gpio ? jstk.axis[3].val : 0
+    );
+  CLR_ADC_VALID(jstk.states);
+}
 
 /**************************************************************************//**
  * @brief ADC initialization

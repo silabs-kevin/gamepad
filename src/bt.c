@@ -12,6 +12,7 @@
 #include "inc/utils.h"
 #include "logging/logging.h"
 #include "inc/hal/button.h"
+#include "inc/hal/joystick.h"
 #include "inc/hid/hid_gamepad.h"
 #include "sl_bt_api.h"
 #include "sl_bt_types.h"
@@ -343,6 +344,10 @@ static inline void __on_external_signals(const sl_bt_msg_t* evt)
   /* e->extsignals is bitmap */
   if (e->extsignals & PB_UPDATE_EVT) {
     btn_update_handler();
+  }
+
+  if (e->extsignals & JOYSTICK_UPDATE_EVT) {
+    jstk_convert();
   }
 }
 

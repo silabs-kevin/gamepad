@@ -27,6 +27,7 @@ extern "C"
 typedef struct {
   GPIO_Port_TypeDef port;
   unsigned int pin;
+  uint8_t ext_int_num;
   uint8_t press_evt_em; /* corresponding release event id = this event id +1 */
 }btn_t;
 

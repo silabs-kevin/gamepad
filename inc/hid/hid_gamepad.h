@@ -16,7 +16,10 @@ extern "C"
 #define REPORT_SIZE 6
 
 typedef void (*btn_update_fn)(uint8_t which, bool press);
-typedef void (*stick_update_fn)(uint8_t which, int8_t press);
+typedef void (*stick_update_fn)(int8_t x,
+                                int8_t y,
+                                int8_t z,
+                                int8_t rz);
 
 typedef struct {
   int8_t report_buf[REPORT_SIZE];
@@ -25,6 +28,8 @@ typedef struct {
   btn_update_fn btn_update;
   stick_update_fn stick_update;
 }gamepad_t;
+
+extern gamepad_t gamepad;
 
 void gamepad_init(void);
 #ifdef __cplusplus

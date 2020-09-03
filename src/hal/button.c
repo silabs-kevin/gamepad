@@ -31,17 +31,19 @@ static btn_evt_t btn_evt = { 0 };
 static const btn_t up_btn = {
   .port = gpioPortF,
   .pin = 6,
+  .ext_int_num = 6,
   .press_evt_em = PB0_PRESS_EM
 };
 
 static const btn_t down_btn = {
   .port = gpioPortF,
   .pin = 7,
+  .ext_int_num = 7,
   .press_evt_em = PB1_PRESS_EM
 };
 
 /* This should align with the sequence 16-bit in the report*/
-static const btn_t *btns[] = {
+static const btn_t *const btns[] = {
   &up_btn,
   &down_btn,
 };
@@ -51,10 +53,22 @@ static const size_t btn_num = sizeof(btns) / sizeof(btn_t *);
 static void btn_push_evt(uint8_t evt)
 {
   ASSERT(btn_evt.num != BTN_EVT_CACHE_SIZE);
-  if (btn_evt.num && btn_evt.cache[btn_evt.num - 1] == evt) {
-    /* not to push the same event for multiple times */
-    return;
+  /*
+   * Event valid only when iterating the queue backwards, the last event is the oppsite event or no
+   *  related event is found.
+   */
+  if (btn_evt.num) {
+    for (uint8_t i = btn_evt.num - 1; i != 0xff; i--) {
+      uint8_t exp_pre_evt = evt % 2 ? evt - 1 : evt + 1;
+      if (btn_evt.cache[i] == exp_pre_evt) {
+        break;
+      } else if (btn_evt.cache[i] == evt) {
+        /* Event not valid since the last same event hasn't been sent */
+        return;
+      }
+    }
   }
+
   btn_evt.cache[btn_evt.num++] = evt;
 }
 
@@ -82,14 +96,14 @@ static void button_init(void)
  ******************************************************************************/
 static void button_interrupt(uint8_t pin)
 {
-  if (pin >= btn_num) {
-    return;
-  }
-  if (GPIO_PinInGet(btns[pin]->port,
-                    btns[pin]->pin)) {
-    btn_push_evt(btns[pin]->press_evt_em);
-  } else {
-    btn_push_evt(btns[pin]->press_evt_em + 1);
+  for (uint8_t i = 0; i < btn_num; i++) {
+    if (btns[i]->ext_int_num == pin) {
+      if (GPIO_PinInGet(btns[i]->port, btns[i]->pin)) {
+        btn_push_evt(btns[i]->press_evt_em);
+      } else {
+        btn_push_evt(btns[i]->press_evt_em + 1);
+      }
+    }
   }
   sl_bt_external_signal(PB_UPDATE_EVT);
 }
@@ -106,11 +120,11 @@ static void enable_button_interrupts(void)
     /* configure interrupt for PB0 and PB1, both falling and rising edges */
     GPIO_ExtIntConfig(btns[i]->port,
                       btns[i]->pin,
-                      i,
+                      btns[i]->ext_int_num,
                       true,
                       true,
                       true);
-    GPIOINT_CallbackRegister(i,
+    GPIOINT_CallbackRegister(btns[i]->ext_int_num,
                              button_interrupt);
   }
 }
@@ -157,7 +171,17 @@ void btn_update_handler(void)
       value = 50;
     } else {
       LOGD("Report stick [%d] value: %d\n", stick, value);
-      gamepad.stick_update(stick, value);
+      if (stick == 0) {
+        gamepad.stick_update(value, 0, 0, 0);
+      } else if (stick == 1) {
+        gamepad.stick_update(0, value, 0, 0);
+      } else if (stick == 2) {
+        gamepad.stick_update(0, 0, value, 0);
+      } else if (stick == 3) {
+        gamepad.stick_update(0, 0, 0, value);
+      } else {
+        return;
+      }
       value = (value == 50) ? 0 : value == 0 ? -50 : 50;
     }
 
